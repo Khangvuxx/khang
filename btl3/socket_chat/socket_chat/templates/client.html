@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Client - Gửi tin</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/static/style.css" rel="stylesheet">
+</head>
+<body class="container mt-4">
+    <h3 class="text-success">🧑‍💻 Client - Gửi và nhận tin</h3>
+    <form id="sendForm">
+        <div class="mb-3">
+            <label for="message" class="form-label">Nhập tin nhắn hoặc lệnh gửi file</label>
+            <input type="text" id="message" class="form-control" placeholder="Tin nhắn...">
+        </div>
+        <button class="btn btn-primary" type="submit">Gửi</button>
+    </form>
+    <div class="mt-4">
+        <h5 class="text-info">📨 Phản hồi:</h5>
+        <div id="responses" class="chat-box"></div>
+    </div>
+<script>
+    const form = document.getElementById("sendForm");
+    const message = document.getElementById("message");
+    const responses = document.getElementById("responses");
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const res = await fetch("/send", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ message: message.value })
+        });
+        message.value = "";
+    });
+
+    async function fetchMessages() {
+        const res = await fetch("/messages");
+        const text = await res.text();
+        const lines = text.split("<br>").map(line => {
+            if (line.startsWith("[Receiver]:"))
+                return `<div class="bubble left">${line.replace("[Receiver]:", "")}</div>`;
+            if (line.includes("<a "))
+                return `<div class="bubble left">${line}</div>`;
+            else
+                return `<div class="bubble right">${line}</div>`;
+        }).join("");
+        responses.innerHTML = lines;
+        responses.scrollTop = responses.scrollHeight;
+    }
+
+    setInterval(fetchMessages, 1000);
+</script>
+</body>
+</html>
